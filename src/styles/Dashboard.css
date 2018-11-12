@@ -1,5 +1,7 @@
 .dashboard {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    padding: 20px;
+}
+
+.graph {
+    padding: 10px;
 }

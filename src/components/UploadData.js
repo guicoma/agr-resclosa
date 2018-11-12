@@ -6,33 +6,10 @@ const FormItem = Form.Item;
 
 const Dragger = Upload.Dragger;
 
-const props = {
-  action: './../server/post.php',
-  customRequest(args) {
-    var reader = new FileReader();
-    
-    // Closure to capture the file information.
-    reader.onload = (function(theFile) {
-      return function(e) {
-        let data = parseFile(e.currentTarget.result);
-        sendData({values: data});
-      };
-    })(args.file);
 
-    // Read in the image file as a data URL.
-    reader.readAsText(args.file);
-  },
-  onChange(info) {
-    const status = info.file.status;
-    if (status !== 'uploading') {
-      console.log(info.file, info.fileList);
-    }
-    if (status === 'done') {
-      message.success(`${info.file.name} file uploaded successfully.`);
-    } else if (status === 'error') {
-      message.error(`${info.file.name} file upload failed.`);
-    }
-  },
+let postData = {
+  accumulated : [],
+  avg_flow    : []
 };
 
 function parseFile(file){
@@ -42,7 +19,7 @@ function parseFile(file){
   values = values.map((item)=>{
     let aux = item.split("\t");
     let obj = {
-      datetime: new Date(aux[0]),
+      datetime: aux[0].replace(new RegExp("/", 'g'),"-"),
       value   : parseFloat(aux[1].replace(",","."))
     };
     return obj;
@@ -51,25 +28,101 @@ function parseFile(file){
   return values;
 }
 
-function sendData(dataobj) {
-  var req = new XMLHttpRequest();
-  req.open('POST', './server/post.php', true);
-  req.setRequestHeader("Content-Type", "application/json");
-  req.send(JSON.stringify(dataobj));
-  req.onreadystatechange = function () {
-    if (req.readyState === 4 && req.status === 200)
-      console.log(req.responseText);
-  };
+function sendFlowData(dataobj) {
+
+  return fetch('./api/flow/upload.php', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(dataobj)
+  }).then((r)=>{
+    console.log(r);
+  })
+  .catch((e)=>{
+    console.error(e);
+  });
+}
+
+function sendVolumeData(dataobj) {
+ return fetch('./api/volume/upload.php', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(dataobj)
+  }).then((r)=>{
+    console.log(r);
+  })
+  .catch((e)=>{
+    console.error(e);
+  });
 }
 
 class UploadData extends Component {
+
+  state = {
+    fileList: [],
+    uploading: false,
+  }
+
   
   handleSubmit = (e) => {
     e.preventDefault();
+    let self = this;
     this.props.form.validateFields((err, values) => {
       if (!err) {
         console.log('Received values of form: ', values);
-        debugger;
+
+        self.setState({
+          uploading: true,
+        });
+
+        const { fileList } = this.state;
+        let reader = new FileReader();
+        fileList.forEach((file) => {          
+          // Closure to capture the file information.
+          reader.onload = (function() {
+            return function(e) {
+              let parsed = parseFile(e.currentTarget.result);
+              if(file.name.includes("VA")){
+                postData.accumulated = postData.accumulated.concat(parsed);
+              }
+              if(file.name.includes("QMH")){
+                postData.avg_flow = postData.avg_flow.concat(parsed);
+              }
+            };
+          })(file);
+
+          // Read in the image file as a data URL.
+          reader.readAsText(file);
+        });
+
+        let promises = [];
+
+        if(postData.accumulated.length > 0)
+          promises.push(sendVolumeData(postData));
+
+        if(postData.avg_flow.length > 0)
+          promises.push(sendFlowData(postData));
+
+        Promise.all(promises).then((r) => {
+          console.log('all done', r);
+          self.setState({
+            fileList: [],
+            uploading: false,
+          });
+          message.success('upload successfully.');
+        }).catch((e) => {
+          console.log('all error', e);
+          self.setState({
+            uploading: false,
+          });
+          message.error('upload failed.');
+        });
+    
       }
     });
   }
@@ -84,10 +137,33 @@ class UploadData extends Component {
 
   render() {
     const { getFieldDecorator } = this.props.form;
+    
     const formItemLayout = {
       labelCol: { span: 6 },
       wrapperCol: { span: 14 },
     };
+
+    const props = {
+      action: './api/flow/upload.php',
+      multiple: true,
+      onRemove: (file) => {
+        this.setState(({ fileList }) => {
+          const index = fileList.indexOf(file);
+          const newFileList = fileList.slice();
+          newFileList.splice(index, 1);
+          return {
+            fileList: newFileList,
+          };
+        });
+      },
+      beforeUpload: (file) => {
+        this.setState(({ fileList }) => ({
+          fileList: [...fileList, file],
+        }));
+        return false;
+      }
+    }
+
     return (
       <Form onSubmit={this.handleSubmit}>
         <FormItem

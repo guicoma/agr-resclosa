@@ -8,6 +8,7 @@ function hasErrors(fieldsError) {
   return Object.keys(fieldsError).some(field => fieldsError[field]);
 }
 
+
 class UploadLogin extends Component {
   state = { redirectToReferrer: false };
 
@@ -22,23 +23,22 @@ class UploadLogin extends Component {
     this.props.form.validateFields((err, values) => {
       if (!err) {
         console.log('Received values of form: ', values);
-
-        // let url = 'http://a0012541.agrenovables.com/auth';
+        //let url = 'http://www.a0012541.agrenovables.com/server/auth.php';
         let url = './server/auth.php';
 
         let headers = new Headers();
 
         //headers.append('Content-Type', 'text/json');
-        headers.append('Authorization', 'Basic ' + btoa(values.userName + ":" + values.password));
+        headers.append('Authorization', 'Basic ' + values.userName + ":" + values.password);
 
         fetch(url, {method:'GET',
                 headers: headers
             }).then(response => {
               console.log('response',response);
               this.setState({ redirectToReferrer: true });
+            }).catch(e => {
+              console.error('error',e);
             });
-        //.done();
-
 
       }
     });

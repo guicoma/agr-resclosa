@@ -9,6 +9,17 @@ import './App.css';
 
 const { Header, Content } = Layout;
 
+const PrivateRoute = ({ component: Component, ...rest }) => (
+  <Route {...rest} render={(props) => (
+    fakeAuth.isAuthenticated === true
+      ? <Component {...props} />
+      : <Redirect to={{
+          pathname: '/login',
+          state: { from: props.location }
+        }} />
+  )} />
+)
+
 class App extends Component {
   render() {
     return (
@@ -29,8 +40,9 @@ class App extends Component {
             <Layout>
               <Content>
                 <Route exact path="/" component={Dashboard} />
-                <Route path="/upload" component={UploadLogin} />
+                <Route path="/login" component={UploadLogin} />
                 <Route path="/data" component={UploadData} />
+                <PrivateRoute path='/data' component={UploadData} />
               </Content>
             </Layout>
           </Layout>

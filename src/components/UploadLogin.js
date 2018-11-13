@@ -10,7 +10,10 @@ function hasErrors(fieldsError) {
 
 
 class UploadLogin extends Component {
-  state = { redirectToReferrer: false };
+  constructor(props) {
+    super(props);
+    this.state = { redirectToReferrer: false };
+  }
 
   componentDidMount() {
     // To disabled submit button at the beginning.
@@ -23,33 +26,37 @@ class UploadLogin extends Component {
     this.props.form.validateFields((err, values) => {
       if (!err) {
         console.log('Received values of form: ', values);
-        //let url = 'http://www.a0012541.agrenovables.com/server/auth.php';
-        let url = './server/auth.php';
+        
+        let credentials = {
+          username: values.userName,
+          password: values.password
+        };
 
-        let headers = new Headers();
-
-        //headers.append('Content-Type', 'text/json');
-        headers.append('Authorization', 'Basic ' + values.userName + ":" + values.password);
-
-        fetch(url, {method:'GET',
-                headers: headers
-            }).then(response => {
-              console.log('response',response);
-              this.setState({ redirectToReferrer: true });
-            }).catch(e => {
-              console.error('error',e);
-            });
-
+        this.setState({ redirectToReferrer: true });
+/*
+        fetch('./server/auth.php', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(credentials)
+        }).then((r)=>{
+          console.log(r);
+          this.setState({ redirectToReferrer: true });
+        })
+        .catch((e)=>{
+          console.error(e);
+        });
+*/
       }
     });
   }
 
   render() {
     const { getFieldDecorator, getFieldsError, getFieldError, isFieldTouched } = this.props.form;
-    
-    let { redirectToReferrer } = this.state;
-
-    if (redirectToReferrer) return <Redirect to={'/data'} />;
+    console.log('this.state.redirectToReferrer', this.state.redirectToReferrer);
+    if (this.state.redirectToReferrer) return <Redirect to={'/data'} />;
 
     // Only show error after a field is touched.
     const userNameError = isFieldTouched('userName') && getFieldError('userName');

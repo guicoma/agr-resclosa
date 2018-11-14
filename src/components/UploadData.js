@@ -17,10 +17,12 @@ function parseFile(file){
   values = values.filter((line)=> {
     return (line !== undefined && line !== "" && line.length !== 0)});
   values = values.map((item)=>{
-    let aux = item.split("\t");
+    let aux   = item.split("\t");
+    let floataux = aux[1].replace(",",".");
+    console.log('asdsfg', parseFloat(floataux), floataux);
     let obj = {
       datetime: aux[0].replace(new RegExp("/", 'g'),"-"),
-      value   : parseFloat(aux[1].replace(",","."))
+      value   : parseFloat(floataux)
     };
     return obj;
   })
@@ -81,10 +83,11 @@ class UploadData extends Component {
         });
 
         const { fileList } = this.state;
-        let reader = new FileReader();
         fileList.forEach((file) => {          
+          let reader = new FileReader();
           // Closure to capture the file information.
           reader.onload = (function() {
+            console.log("file.name",file.name)
             return function(e) {
               let parsed = parseFile(e.currentTarget.result);
               if(file.name.includes("VA")){

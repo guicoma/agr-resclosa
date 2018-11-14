@@ -6,8 +6,10 @@ import Dashboard from './components/Dashboard';
 import UploadLogin from './components/UploadLogin';
 import UploadData from './components/UploadData';
 import './App.css';
+import Logo from './assets/logo.svg';
 
 const { Header, Content } = Layout;
+
 
 const fakeAuth = {
   isAuthenticated: true,
@@ -50,7 +52,9 @@ class App extends Component {
         <div className="App">
           <Layout>
             <Header className="header">
-              <div className="logo" />
+            <Link to="/">
+              <img src={Logo} className="logo" alt="logo"/>
+            </Link>
               <Menu
                 theme="dark"
                 mode="horizontal"

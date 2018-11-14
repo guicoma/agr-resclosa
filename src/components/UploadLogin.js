@@ -8,6 +8,13 @@ function hasErrors(fieldsError) {
   return Object.keys(fieldsError).some(field => fieldsError[field]);
 }
 
+function getHTTPObject() {
+  if (typeof XMLHttpRequest != 'undefined') {
+      return new XMLHttpRequest();
+  } 
+  return false;
+}
+
 
 class UploadLogin extends Component {
   constructor(props) {
@@ -32,13 +39,25 @@ class UploadLogin extends Component {
           password: values.password
         };
 
-        this.setState({ redirectToReferrer: true });
+//        this.setState({ redirectToReferrer: true });
+        var http = getHTTPObject();
+        http.open("get", './server/auth.php', false, credentials.username, credentials.password);
+        http.send("");
+        if (http.status === 200) {
+          debugger;
+          this.setState({ redirectToReferrer: true });
+        } else {
+            alert("Incorrect username and/or password.");
+        }
+        return false;
+
 /*
         fetch('./server/auth.php', {
           method: 'POST',
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
+            'Authorization': token
           },
           body: JSON.stringify(credentials)
         }).then((r)=>{

@@ -18,7 +18,7 @@ const columns = [{
   dataIndex: 'avg_flow',
   key: 'avg_flow',
 }, {
-  title: 'Volume accumulated (h^3)',
+  title: 'Volume accumulated (hm^3)',
   dataIndex: 'volume_acc',
   key: 'volume_acc',
 }];
@@ -137,7 +137,7 @@ class Dashboard extends Component {
         <h4>Registre d'Aigues: A-0012541</h4>
         <div className="dashboard">
           <div>
-            <Divider>Volumen acumulat (h<sup>3</sup>) - {this.state.year}</Divider>
+            <Divider>Volumen acumulat (hm<sup>3</sup>) - {this.state.year}</Divider>
             <div className="graph">
               <LineChart width={700} height={420} data={this.state.volume_data}>
                 <Line type="monotone" dataKey="volume_acc" stroke="#8884d8" dot={false} />

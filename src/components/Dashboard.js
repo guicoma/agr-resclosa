@@ -152,7 +152,7 @@ class Dashboard extends Component {
               <LineChart width={700} height={420} data={this.state.volume_data}>
                 <Line type="monotone" dataKey="volume_acc" stroke="#8884d8" dot={false} />
                 <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-                <XAxis interval={63} dataKey="datetime" tickFormatter={(tick) => moment(tick).format('MMM')} />
+                <XAxis interval={parseInt(this.state.volume_data.length/12)} dataKey="datetime" tickFormatter={(tick) => moment(tick).format('MMM')} />
                 <YAxis />
               </LineChart>
             </div>
@@ -168,7 +168,7 @@ class Dashboard extends Component {
               <BarChart width={700} height={420} data={this.state.flow_data}
                 margin={{top: 5, right: 30, left: 20, bottom: 5}}>
                 <CartesianGrid strokeDasharray="3 3"/>
-                <XAxis dataKey="datetime" interval={22} tickFormatter={(tick) => moment(tick).format('D')}/>
+                <XAxis dataKey="datetime" interval={parseInt(this.state.flow_data.length/30)} tickFormatter={(tick) => moment(tick).format('D')}/>
                 <YAxis/>
                 <Bar dataKey="avg_flow" fill="#8884d8" />
               </BarChart>

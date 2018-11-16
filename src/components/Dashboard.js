@@ -33,11 +33,21 @@ function handleErrors(response) {
 class Dashboard extends Component {
   constructor(props) {
     super(props);
+
+    let tempVolume = [], tempFlow = [], tempTable = [];
+    /*
+    for(let i = 0; i < 710; i++) {
+      let datestamp = moment().add(-i,'hour').format('YYYY-MM-DD HH:mm');
+      tempVolume.push({datetime: datestamp, volume_acc: i * Math.random()});
+      tempFlow.push({datetime: datestamp, avg_flow: Math.random()});
+    }
+    tempTable = merge(tempVolume, tempFlow);
+    */
     this.state = {
       loading: false,
-      volume_data: [],
-      flow_data: [],
-      table_data: [],
+      volume_data: tempVolume,
+      flow_data: tempFlow,
+      table_data: tempTable,
       width: 700,
       height: 500,
       year: 2018,
@@ -83,7 +93,7 @@ class Dashboard extends Component {
         let auxFlow = flowData.slice();
         let auxVol  = volumeData.slice();
         
-        tableData = merge(auxVol, auxFlow).reverse();
+        tableData = merge(auxVol, auxFlow);
   /*
         console.log('DATA');
         console.log('flowData', flowData);
@@ -142,7 +152,7 @@ class Dashboard extends Component {
               <LineChart width={700} height={420} data={this.state.volume_data}>
                 <Line type="monotone" dataKey="volume_acc" stroke="#8884d8" dot={false} />
                 <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-                <XAxis dataKey="datetime" />
+                <XAxis interval={63} dataKey="datetime" tickFormatter={(tick) => moment(tick).format('MMM')} />
                 <YAxis />
               </LineChart>
             </div>
@@ -158,7 +168,7 @@ class Dashboard extends Component {
               <BarChart width={700} height={420} data={this.state.flow_data}
                 margin={{top: 5, right: 30, left: 20, bottom: 5}}>
                 <CartesianGrid strokeDasharray="3 3"/>
-                <XAxis dataKey="datetime"/>
+                <XAxis dataKey="datetime" interval={22} tickFormatter={(tick) => moment(tick).format('D')}/>
                 <YAxis/>
                 <Bar dataKey="avg_flow" fill="#8884d8" />
               </BarChart>

@@ -2,12 +2,12 @@ import React, { Component } from 'react';
 import { BarChart, Bar, LineChart, Line, CartesianGrid, XAxis, YAxis } from 'recharts';
 import moment from "moment"
 import { withRouter } from 'react-router-dom';
-import { Table, Button, Divider, Icon, message } from 'antd';
-import { merge } from 'lodash';
+import { Table, Divider, message, DatePicker } from 'antd';
+import { merge, unionBy, orderBy } from 'lodash';
 
 import './../styles/Dashboard.css';
 
-const ButtonGroup = Button.Group;
+const { MonthPicker } = DatePicker;
 
 const columns = [{
   title: 'Date',
@@ -23,6 +23,9 @@ const columns = [{
   key: 'volume_acc',
 }];
 
+const hoursInYear  = moment.duration(1, 'years').asHours();
+const hoursInMonth = moment.duration(1, 'months').asHours();
+
 function handleErrors(response) {
   if (!response.ok) {
       throw Error(response.statusText);
@@ -30,19 +33,31 @@ function handleErrors(response) {
   return response.json();
 }
 
+
 class Dashboard extends Component {
   constructor(props) {
     super(props);
 
-    let tempVolume = [], tempFlow = [], tempTable = [];
-    /*
-    for(let i = 0; i < 710; i++) {
-      let datestamp = moment().add(-i,'hour').format('YYYY-MM-DD HH:mm');
-      tempVolume.push({datetime: datestamp, volume_acc: i * Math.random()});
-      tempFlow.push({datetime: datestamp, avg_flow: Math.random()});
+    let tempVolume  = [];
+    let tempFlow    = [];
+    let tempTable   = [];
+    let initYear    = '2018';
+    let initMonth   = '10';
+    
+    for (let i = 0; i < hoursInYear; i++) {
+      let datestamp = moment(initYear+'-01-01 00:00:00').add(i,'hour').format('YYYY-MM-DD HH:mm:ss');
+      tempVolume.push({datetime: datestamp, volume_acc: null});
     }
-    tempTable = merge(tempVolume, tempFlow);
-    */
+    for (let i = 0; i < hoursInMonth; i++) {
+      let datestamp = moment(initYear+'-'+initMonth+'-01 00:00:00').add(i,'hour').format('YYYY-MM-DD HH:mm:ss');
+      tempFlow.push({datetime: datestamp, volume_acc: null});
+    }
+
+    let auxFlow = tempFlow.map(a => Object.assign({}, a));
+    let auxVol  = tempVolume.map(a => Object.assign({}, a));
+        
+    tempTable = merge(auxVol, auxFlow);
+    
     this.state = {
       loading: false,
       volume_data: tempVolume,
@@ -50,8 +65,7 @@ class Dashboard extends Component {
       table_data: tempTable,
       width: 700,
       height: 500,
-      year: 2018,
-      month: 10
+      year_month: initYear+'/'+initMonth
     }
   }
 
@@ -73,8 +87,16 @@ class Dashboard extends Component {
       })
       .then(handleErrors)
       .then((flow) => {
-        flowData = flow.records;
         //console.log('read-flow',flowData);
+        let tempFlow = [];
+        let textMonth = (month < 10)? '0'+month : month;
+        for (let i = 0; i < hoursInMonth; i++) {
+          let datestamp = moment(year+'-'+textMonth+'-01 00:00:00').add(i,'hour').format('YYYY-MM-DD HH:mm:ss');
+          tempFlow.push({datetime: datestamp, volume_acc: null});
+        }
+
+        flowData = orderBy(unionBy(flow.records, tempFlow, 'datetime'), 'datetime');
+
         this.setState({flow_data: flowData});
         //return fetch('./api/volume/read.php');
         return fetch('./api/volume/readRange.php', {
@@ -88,22 +110,22 @@ class Dashboard extends Component {
       })
       .then(handleErrors)
       .then((volume) => {
+
         volumeData = volume.records;
 
-        let auxFlow = flowData.slice();
-        let auxVol  = volumeData.slice();
+        let auxFlow = flowData.map(a => Object.assign({}, a));
+        let auxVol  = volumeData.map(a => Object.assign({}, a));
         
         tableData = merge(auxVol, auxFlow);
-  /*
+  
         console.log('DATA');
         console.log('flowData', flowData);
         console.log('volumeData', volumeData);
         console.log('tableData', tableData.filter((item) => { return ("avg_flow" in item)}));
-  */
+  
         this.setState({
           loading     : false,
-          year        : year,
-          month       : month,
+          year_month  : year+"/"+month,
           volume_data : volumeData,
           table_data  : tableData.filter((item) => { return ("avg_flow" in item)})
         });
@@ -117,37 +139,33 @@ class Dashboard extends Component {
   }
 
   componentDidMount() {
-    this.fetchData(this.state.year, this.state.month);
+    let dateAux = this.state.year_month.split("/"),
+        year    = parseInt(dateAux[0]),
+        month   = parseInt(dateAux[1]);
+
+    this.fetchData(year, month);
   }
 
-  searchPrevYear = () => {
-    this.setState({loading:true});
-    this.fetchData(this.state.year-1,this.state.month);
+  onChangeDate = (date, dateString) => {
+    if(date) {
+      this.setState({loading:true});
+      console.log(date, date.month(), date.year(), dateString);
+      this.fetchData(date.year(), date.month()+1);
+    }
   }
-
-  searchNextYear = () => {
-    this.setState({loading:true});
-    this.fetchData(this.state.year+1, this.state.month);
-  }
-
-  searchPrevMonth = () => {
-    this.setState({loading:true});
-    this.fetchData(this.state.year, this.state.month-1);
-  }
-
-  searchNextMonth = () => {
-    this.setState({loading:true});
-    this.fetchData(this.state.year, this.state.month+1);
-  }
+  
   
   render() {
     return (
       <div>
         <h1>Resclosa - Moli de la Coromina</h1>
         <h4>Registre d'Aigues: A-0012541</h4>
+        <div>
+          <MonthPicker size={"large"} onChange={this.onChangeDate} value={moment(this.state.year_month, 'YYYY/MM')} defaultValue={moment(this.state.year_month, 'YYYY/MM')} allowClear={false} placeholder="Select Month" />
+        </div>
         <div className="dashboard">
           <div>
-            <Divider>Volumen acumulat (hm<sup>3</sup>) - {this.state.year}</Divider>
+              <Divider>Volumen acumulat (hm<sup>3</sup>)</Divider>
             <div className="graph">
               <LineChart width={700} height={420} data={this.state.volume_data}>
                 <Line type="monotone" dataKey="volume_acc" stroke="#8884d8" dot={false} />
@@ -156,28 +174,18 @@ class Dashboard extends Component {
                 <YAxis />
               </LineChart>
             </div>
-            <ButtonGroup>
-              <Button onClick={this.searchPrevYear} disabled={this.state.loading}><Icon type="left" /></Button>
-              <Button type="dashed" loading={this.state.loading}>{this.state.year}</Button>
-              <Button onClick={this.searchNextYear} disabled={this.state.loading || (this.state.year === moment().year())}><Icon type="right" /></Button>
-            </ButtonGroup>
           </div>
           <div>
-            <Divider>Cabal mitjà horari (L/s) - {moment(this.state.month, "M").format("MMMM")}</Divider>
+            <Divider>Cabal mitjà horari (L/s)</Divider>
             <div className="graph">
               <BarChart width={700} height={420} data={this.state.flow_data}
                 margin={{top: 5, right: 30, left: 20, bottom: 5}}>
                 <CartesianGrid strokeDasharray="3 3"/>
-                <XAxis dataKey="datetime" interval={parseInt(this.state.flow_data.length/30)} tickFormatter={(tick) => moment(tick).format('D')}/>
+                <XAxis interval={parseInt(this.state.flow_data.length/31)} dataKey="datetime" tickFormatter={(tick) => moment(tick).format('D')}/>
                 <YAxis/>
                 <Bar dataKey="avg_flow" fill="#8884d8" />
               </BarChart>
             </div>
-            <ButtonGroup>
-              <Button onClick={this.searchPrevMonth} disabled={this.state.loading}><Icon type="left" /></Button>
-              <Button type="dashed" loading={this.state.loading}>{moment(this.state.month, "M").format("MMMM")}</Button>
-              <Button onClick={this.searchNextMonth} disabled={this.state.loading || (this.state.month === moment().month() && this.state.year === moment().year())}><Icon type="right" /></Button>
-            </ButtonGroup>
           </div>
         </div>
         <Divider />

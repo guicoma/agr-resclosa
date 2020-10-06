@@ -9,14 +9,6 @@ function hasErrors(fieldsError) {
   return Object.keys(fieldsError).some(field => fieldsError[field]);
 }
 
-function getHTTPObject() {
-  if (typeof XMLHttpRequest != 'undefined') {
-      return new XMLHttpRequest();
-  }
-  return false;
-}
-
-
 class UploadLogin extends Component {
 
   constructor(props){

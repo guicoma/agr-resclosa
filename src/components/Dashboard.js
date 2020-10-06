@@ -41,8 +41,8 @@ class Dashboard extends Component {
     let tempVolume  = [];
     let tempFlow    = [];
     let tempTable   = [];
-    let initYear    = '2018';
-    let initMonth   = '10';
+    let initYear    = '2020';
+    let initMonth   = '08';
     
     for (let i = 0; i < hoursInYear; i++) {
       let datestamp = moment(initYear+'-01-01 00:00:00').add(i,'hour').format('YYYY-MM-DD HH:mm:ss');

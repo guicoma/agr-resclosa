@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { withRouter, Redirect } from 'react-router-dom';
 import { Form, Icon, Input, Button } from 'antd';
+// import {PostData} from '../services/PostData.js';
 
 const FormItem = Form.Item;
 
@@ -11,7 +12,7 @@ function hasErrors(fieldsError) {
 function getHTTPObject() {
   if (typeof XMLHttpRequest != 'undefined') {
       return new XMLHttpRequest();
-  } 
+  }
   return false;
 }
 
@@ -33,7 +34,7 @@ class UploadLogin extends Component {
     this.props.form.validateFields((err, values) => {
       if (!err) {
         console.log('Received values of form: ', values);
-        
+
         let credentials = {
           username: values.userName,
           password: values.password
@@ -50,6 +51,10 @@ class UploadLogin extends Component {
             alert("Incorrect username and/or password.");
         }
         return false;
+
+        // PostData('login', this.state).then((result) => {
+        //     let responseJson = result;
+        // })
 
 /*
         fetch('./server/auth.php', {
